@@ -32,13 +32,49 @@ class HeatmapPlugin {
      * @param theme
      * @param instantRender render it instant or wait for render()
      */
-    constructor(containerId, data, options = {}, theme = {}, instantRender = false){
+    constructor(containerId, data = {}, options = {}, theme = {}, instantRender = false){
+        this.transferObject(options,this._options,'range');
+        // check which school term
+        const start_spring = new Date().getFullYear()+'-03-01T00:00:00';
+        const end_spring   = new Date().getFullYear()+'-07-20T00:00:00';
+        const start_autumn = new Date().getFullYear()+'-09-01T00:00:00';
+        const end_autumn   = new Date().getFullYear()+1+'-01-20T00:00:00';
+        if (new Date() >= new Date(start_spring) && new Date() <= new Date(end_spring)){
+            this._options.range.from = start_spring;
+            this._options.range.till = end_spring;
+        } else if (new Date() >= new Date(start_autumn) && new Date() <= new Date(end_autumn)){
+            this._options.range.from = start_autumn;
+            this._options.range.till = end_autumn;
+        } else {
+            this._options.range.from = new Date().getFullYear()+'-01-01T00:00:00';;
+            this._options.range.till = new Date().getFullYear()+'-12-30T00:00:00';;
+        }
+
+        var tmp_from = new Date(this._options.range.from);
+        while (true){
+            if (tmp_from.getDay() == '1'){
+                break;
+            } else {
+                tmp_from.setDate(tmp_from.getDate()-1);
+            }
+        }
+
+        // generate data
+        var data_current = new Date(this._options.range.from);
+        var data_end     = new Date(this._options.range.till);
+        var idx;
+        while(data_current <= data_end){
+            idx = data_current.getDate()+'.'+(data_current.getMonth()+1)+'.'+data_current.getFullYear()+
+                'T'+data_current.getHours()+':'+data_current.getMinutes()+':'+data_current.getSeconds();
+            if(data_current <= new Date()){
+                data[idx] = 4;
+            }
+            data_current.setDate(data_current.getDate()+1);
+        }
         this._data = data;
 
-        this.transferObject(options,this._options,'range');
-        //replace #year# with current year
-        this._options.range.from = this._options.range.from.replace(/#year#/i,new Date().getFullYear());
-        this._options.range.till = this._options.range.till.replace(/#year#/i,new Date().getFullYear());
+        this._options.range.from = tmp_from.toISOString();
+
         this.transferObject(theme,this._theme,'font');
 
         this._container = window.document.getElementById(containerId);
@@ -77,6 +113,7 @@ class HeatmapPlugin {
         let html = '';
         let current = new Date(this._options.range.from);
         let target = new Date(this._options.range.till);
+        let data = this._data;
         while (current <= target) {
             unit = current.getDate() + '.' + (current.getMonth() + 1) + '.' + current.getFullYear() +
                 'T' + current.getHours() + ':' + current.getMinutes() + ':' + current.getSeconds();
@@ -121,17 +158,6 @@ class HeatmapPlugin {
     }
     addLegend(){
         let legend = document.createElement('div');
-        let html = 'less ';
-        for(let option=0;option<this._options.units; option++){
-            html += '<div style="'+
-                    'height: '+(this._theme.height/2)+'px; '+
-                    'width: '+(this._theme.width/2)+'px; '+
-                    '" class="entry color-'+
-                    option+'"';
-        html += '></div>';
-        }
-        html += ' many'
-        legend.innerHTML = html;
         legend.style.color = this._theme.font.color;
         legend.style.fontSize = this._theme.font.size+'px';
         legend.style.fontFamily = this._theme.font.family;

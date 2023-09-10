@@ -8,7 +8,7 @@
     flex-wrap: wrap;
 }
 body{
-    background-color: #0d1117;
+    /*background-color: #0d1117;*/
 }
 .entry{
     display: inline-block;
@@ -16,7 +16,7 @@ body{
     margin: 1px;
 }
 .color-0{
-    background-color: #505050;
+    background-color: #ebedf0;
 }
 .color-1{
     background-color: #006d32;
